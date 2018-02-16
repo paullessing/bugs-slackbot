@@ -1,0 +1,8 @@
+{
+  "name": "demo-env-slackbot",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Paul Lessing <paul@paullessing.com>",
+  "license": "MIT",
+  "private": false
+}

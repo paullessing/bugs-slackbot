@@ -1,0 +1,43 @@
+service: demo-env-slackbot
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  region: eu-west-2
+#  iamRoleStatements:
+#    - Effect: Allow
+#      Action:
+#        - dynamodb:GetItem
+#        - dynamodb:PutItem
+#        - dynamodb:Scan
+#      Resource: arn:aws:dynamodb:eu-west-1:*:*
+
+functions:
+#  slackMessage:
+#    handler: handler.slackMessage
+#    events:
+#      - http:
+#          path: message
+#          method: post
+  jiraHook:
+    handler: handler.jira
+    events:
+      - http:
+          path: jira
+          method: post
+
+#resources:
+#  Resources:
+#    environmentsTable:
+#      Type: AWS::DynamoDB::Table
+#      Properties:
+#        TableName: environments
+#        AttributeDefinitions:
+#          - AttributeName: environment
+#            AttributeType: S
+#        KeySchema:
+#          - AttributeName: environment
+#            KeyType: HASH
+#        ProvisionedThroughput:
+#          ReadCapacityUnits: 1
+#          WriteCapacityUnits: 1
