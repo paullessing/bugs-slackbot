@@ -10,13 +10,14 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
+    "axios": "^0.17.1",
     "body-parser": "^1.18.2"
   },
   "devDependencies": {
+    "@types/aws-lambda": "^0.0.32",
     "@types/body-parser": "^1.16.8",
     "@types/node": "^9.4.6",
-    "@types/aws-lambda": "^0.0.32",
-    "serverless-plugin-typescript": "^1.1.5",
-    "serverless-google-cloudfunctions": "^1.1.0"
+    "serverless-google-cloudfunctions": "^1.1.0",
+    "serverless-plugin-typescript": "^1.1.5"
   }
 }

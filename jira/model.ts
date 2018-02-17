@@ -58,11 +58,11 @@ export interface SimpleIssue extends ApiObject {
   fields: IssueFields;
 }
 
-interface DetailedIssue extends SimpleIssue {
+export interface DetailedIssue extends SimpleIssue {
   fields: DetailedIssueFields;
 }
 
-interface FullIssue extends DetailedIssue {
+export interface Issue extends DetailedIssue {
   fields: FullIssueFields;
 }
 
