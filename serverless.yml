@@ -17,12 +17,12 @@ provider:
 #      Resource: arn:aws:dynamodb:eu-west-1:*:*
 
 functions:
-#  slackMessage:
-#    handler: handler.slackMessage
-#    events:
-#      - http:
-#          path: message
-#          method: post
+  slackMessage:
+    handler: aws-handler.slackMessage
+    events:
+      - http:
+          path: message
+          method: post
   jiraHook:
     handler: aws-handler.jira
     events:

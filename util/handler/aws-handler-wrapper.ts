@@ -1,13 +1,13 @@
-import { HandlerWrapper, HandlerConfig, HandlerRequest, RequestHandler, HttpBodyParseType } from './handler-wrapper.interface';
+import { HandlerRequest, HandlerWrapper, RequestHandler } from './handler-wrapper.interface';
 import { APIGatewayEvent } from 'aws-lambda';
 import * as querystring from 'querystring';
 
 export class AwsHandlerWrapper implements HandlerWrapper {
-  public wrap(handler: RequestHandler, config?: HandlerConfig) {
-    return (event, context, callback) => {
-      // console.log('Handling request');
+  public wrap(handler: RequestHandler) {
+    return (event: APIGatewayEvent, context, callback) => {
+      console.log('Handling request', event.headers);
 
-      const request = this.convertRequest(event, config);
+      const request = this.convertRequest(event);
 
       return Promise.resolve()
         .then(() => handler(request))
@@ -32,8 +32,8 @@ export class AwsHandlerWrapper implements HandlerWrapper {
     }
   }
 
-  private convertRequest(event: APIGatewayEvent, config?: HandlerConfig): HandlerRequest {
-    const body = this.getBody(event.body, config ? config.parse : null); // TODO look at content type instead
+  private convertRequest(event: APIGatewayEvent): HandlerRequest {
+    const body = this.getBody(event.body, event.headers['Content-Type']); // TODO look at content type instead
     const request: HandlerRequest = {
       headers: { ...event.headers },
       body,
@@ -42,26 +42,26 @@ export class AwsHandlerWrapper implements HandlerWrapper {
     return request;
   }
 
-  private getBody(bodyString: string | null, parse?: HttpBodyParseType | null): any {
-    if (!parse || parse === 'raw') {
+  private getBody(bodyString: string | null, contentType: string | null): any {
+    if (!contentType) {
       return bodyString;
     }
     if (!bodyString) {
       return null;
     }
 
-    if (parse === 'string') {
+    if (contentType === 'text/plain') {
       return '' + bodyString;
     }
 
-    if (parse === 'urlencoded') {
+    if (contentType === 'application/x-www-form-urlencoded') {
       return querystring.parse(bodyString);
     }
 
-    if (parse === 'json') {
+    if (contentType === 'application/json') {
       return JSON.parse(bodyString);
     }
 
-    throw new Error('Unexpected parse type ' + parse);
+    throw new Error('Unexpected content type ' + contentType);
   }
 }

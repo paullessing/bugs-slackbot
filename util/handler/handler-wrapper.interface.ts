@@ -7,12 +7,6 @@ export interface HandlerRequest<B = any> {
   // TODO path, querystring, etc
 }
 
-export type HttpBodyParseType = 'raw' | 'string' | 'json' | 'urlencoded';
-
-export interface HandlerConfig {
-  parse?: HttpBodyParseType;
-}
-
 export type RequestHandler = (request: HandlerRequest) => HandlerResponse | Promise<HandlerResponse>;
 
 export interface HandlerResponse {
@@ -21,5 +15,5 @@ export interface HandlerResponse {
 }
 
 export interface HandlerWrapper {
-  wrap(handler: RequestHandler, config?: HandlerConfig);
+  wrap(handler: RequestHandler);
 }
