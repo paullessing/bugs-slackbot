@@ -2,6 +2,7 @@
 /config/config.ts
 
 # Serverless
+.build
 .serverless
 .env
 tmp

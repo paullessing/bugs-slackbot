@@ -53,9 +53,10 @@ export class JiraService {
     const created = moment(event.issue.fields.created);
     const isLongAgo = created.diff(moment(), 'days') < -7;
 
-    const message = `Issue ${event.issue.key} (${event.issue.fields.summary}) has been closed by ${event.user.displayName}.\n` +
-      `This issue was first reported ${created.fromNow()}${isLongAgo ? ` (${created.format('DD/MM/YYYY')})` : ''}.\n` +
-      `${users.map((u) => u.display).join(', ')} ${users.length > 1 ? 'were' : 'was'} watching.`;
+    const message = `Issue closed by ${event.user.displayName}:\n` +
+      `*${event.issue.fields.summary}* (${event.issue.key})\n` +
+      `First reported ${created.fromNow()}${isLongAgo ? ` (${created.format('DD/MM/YYYY')})` : ''}.\n` +
+      `Affected users: ${users.map((u) => u.display).join(', ')}`;
 
     console.log('Message:', message);
 
