@@ -1,65 +1,57 @@
-import { HandlerRequest, HandlerResponse } from '../util/handler/index';
+import { HandlerRequest, HandlerResponse } from '../util/handler';
+import { getUnique } from '../util/array';
+import { jiraService } from '../services/jira.service';
+import { SlackCommandBody } from '../models/slack-command-body.model';
+import { slackApi } from '../api/slack.api';
+import { createUser, isSameUser, parseUser, SlackUser } from '../models/slack-user.model';
 
-export async function handleSlackMessage(request: HandlerRequest): Promise<HandlerResponse> {
+export function handleSlackCommand(request: HandlerRequest, done: (response?: HandlerResponse) => void): void {
   console.log('Request:', request);
 
-  return null;
+  const body = request.body as SlackCommandBody;
+
+  if (body.token !== 'DI9lqLn5yKx709kLkOoU3obv') {
+    return done({
+      statusCode: 403,
+      body: 'Invalid auth token'
+    });
+  }
+
+  const regex = /^((?:cpd-)?\d+)(?:\s+((?:<@[a-z0-9|]+>(?:,?\s+?)?)+))?/i;
+  const match = body.text.match(regex);
+
+  if (!match) {
+    return done({
+      statusCode: 200,
+      body: 'Could not match a bug.\nFormat: `/track-bug CPD-1234 @user1 @user2`'
+    });
+  }
+  const issueKey = getIssueKey(match[1]);
+  const users = (match[2] || '').split(/,\s+/g).filter((user) => !!user).map(parseUser);
+  if (!users.length) {
+    users.push(createUser(body.user_id, body.user_name));
+  }
+
+  done({
+    statusCode: 200
+  });
+
+  jiraService.addUsersToIssue(issueKey, getUnique<SlackUser>(users, isSameUser))
+    .then((addedUsers) => {
+      slackApi.post(
+        `Added ${addedUsers} ${addedUsers === 1 ? 'user' : 'users'} to issue ${issueKey}.`,
+        body.response_url
+      )
+    }).catch((err) => {
+      console.log('ERROR', err);
+      slackApi.post('An error occurred.', body.response_url);
+    });
 }
-//
-// exports.handle = function handle(event) {
-//   const query = querystring.parse(event.body);
-//   const command = query && query.text || '';
-//   const user = users.getCanonicalName(query.user_name);
-//
-//   const claimMatch = (/^claim (\w+)/i).exec(command);
-//   if (claimMatch && environments.isValid(claimMatch[1])) {
-//     const env = claimMatch[1];
-//
-//     return database.markEnvironment(user, env, new Date())
-//       .then(() => slack.post(`${user} is using *${env}*`))
-//       .then(() => ({ statusCode: 200 }));
-//   }
-//
-//   const releaseMatch = (/^free (\w+)/i).exec(command);
-//   if (releaseMatch && environments.isValid(releaseMatch[1])) {
-//     const env = releaseMatch[1];
-//
-//     return database.markEnvironment(user, env, null)
-//       .then(() => slack.post(`${user} is no longer using *${env}*`))
-//       .then(() => ({ statusCode: 200 }));
-//   }
-//
-//   const listMatch = (/^list($|\s)/i).exec(command);
-//   if (listMatch) {
-//     function formatTime(time) {
-//       let hours = time.getHours();
-//       const amPm = hours < 12 ? 'am' : 'pm';
-//       if (hours > 12) {
-//         hours -= 12;
-//       }
-//       const minutes = time.getMinutes() < 10 ? ('0' + time.getMinutes()) : time.getMinutes();
-//       return `${hours}:${minutes}${amPm}`;
-//     }
-//
-//     return environments.getActive()
-//       .then((envs) => ({
-//         statusCode: 200,
-//         body: envs.length ?
-//           `Active environments: ${envs.sort(sortEnvironments).map((env) => `*${env.environment}* (${users.getCanonicalName(env.username)} since ${formatTime(env.time)})`).join('\n')}` :
-//           'Everything is free, take one!'
-//       }));
-//   }
-//
-//   return Promise.resolve({
-//     statusCode: 200,
-//     body: '*How to use:*\n' +
-//     '`list`: Show active environments\n' +
-//     '`claim <env>`: Mark environment as _in use_\n' +
-//     '`free <env>`: Mark environment as no longer used\n' +
-//     '`help`: Show this help'
-//   });
-// };
-//
-// function sortEnvironments(a, b) {
-//   return a.environment < b.environment ? -1 : a.environment > b.environment ? 1 : 0;
-// }
+
+function getIssueKey(keyOrNumber: string): string {
+  if (keyOrNumber.match(/^cpd-\d+$/i)) {
+    return keyOrNumber.toUpperCase();
+  } else {
+    return 'CPD-' + keyOrNumber;
+  }
+}

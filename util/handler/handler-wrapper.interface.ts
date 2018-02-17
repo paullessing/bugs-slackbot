@@ -7,7 +7,8 @@ export interface HandlerRequest<B = any> {
   // TODO path, querystring, etc
 }
 
-export type RequestHandler = (request: HandlerRequest) => HandlerResponse | Promise<HandlerResponse>;
+export type RequestHandler =
+  (request: HandlerRequest, done: (response?: HandlerResponse) => void) => void | HandlerResponse | Promise<HandlerResponse>;
 
 export interface HandlerResponse {
   statusCode: number;

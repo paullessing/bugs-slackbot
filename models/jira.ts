@@ -52,9 +52,19 @@ export interface Comment extends ApiObject {
   updated: string; // "2018-02-17T12:52:23.827+0000"
 }
 
-export interface SimpleIssue extends ApiObject {
+export interface BaseIssue extends ApiObject {
   id: string; // numeric
   key: IssueKey; // "CPD-2541";
+  fields: object;
+}
+
+export interface IssueWithSummaryAndComments extends BaseIssue {
+  fields: {
+    summary: string;
+  } & IssueFieldComments;
+}
+
+export interface SimpleIssue extends BaseIssue {
   fields: IssueFields;
 }
 
@@ -62,8 +72,8 @@ export interface DetailedIssue extends SimpleIssue {
   fields: DetailedIssueFields;
 }
 
-export interface Issue extends DetailedIssue {
-  fields: FullIssueFields;
+export interface Issue extends DetailedIssue, IssueWithSummaryAndComments {
+  fields: DetailedIssueFields & IssueFieldComments;
 }
 
 export interface IssueFields {
@@ -120,7 +130,7 @@ export interface DetailedIssueFields extends IssueFields, CustomFields {
   duedate: UNKNOWN;
 }
 
-export interface FullIssueFields extends DetailedIssueFields {
+export interface IssueFieldComments extends DetailedIssueFields {
   comment: {
     comments: Comment[];
     maxResults: number; // 2,

@@ -1,29 +1,30 @@
 import { config } from '../config';
 import axios from 'axios';
+import { IssueWithSummaryAndComments } from '../models/jira';
 
 export const API_PATH = config.jiraServer + '/rest/api/2';
+const auth = {
+  username: config.jiraUser,
+  password: config.jiraToken
+};
 
 export const jiraApi = {
   getItem<T>(selfUrl: string): Promise<T> {
     return axios(selfUrl, {
-      auth: {
-        username: config.jiraUser,
-        password: config.jiraToken
-      }
+      auth
     }).then((response) => response.data as T);
   },
-  getComments(issueKey: string): Promise<Comment[]> {
-    // NOTE this does not fetch paginated comments - we are assuming that no issue has enough comments (>50) for this to be an issue
-    return axios(`${API_PATH}/issue/${issueKey}/comment`, {
-      method: 'get',
-    }).then((response) => response.data.comments as Comment[]);
+  getIssueWithSummaryAndComments(issueKey: string): Promise<IssueWithSummaryAndComments> {
+    return axios(`${API_PATH}/issue/${issueKey}`, { auth })
+      .then((response) => response.data as IssueWithSummaryAndComments);
   },
   addComment(issueKey: string, comment: string): Promise<Comment> {
     return axios(`${API_PATH}/issue/${issueKey}/comment`, {
       method: 'post',
       data: {
         body: comment
-      }
+      },
+      auth
     }).then((response) => response.data as Comment);
   },
   updateComment(issueKey: string, commentId: string, comment: string): Promise<Comment> {
@@ -31,7 +32,8 @@ export const jiraApi = {
       method: 'put',
       data: {
         body: comment
-      }
+      },
+      auth
     }).then((response) => response.data as Comment);
   }
 };

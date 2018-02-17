@@ -1,4 +1,4 @@
-import { HandlerRequest, HandlerWrapper, RequestHandler } from './handler-wrapper.interface';
+import { HandlerRequest, HandlerResponse, HandlerWrapper, RequestHandler } from './handler-wrapper.interface';
 import { APIGatewayEvent } from 'aws-lambda';
 import * as querystring from 'querystring';
 
@@ -10,8 +10,26 @@ export class AwsHandlerWrapper implements HandlerWrapper {
       const request = this.convertRequest(event);
 
       return Promise.resolve()
-        .then(() => handler(request))
-        .then((result) => {
+        .then(() => {
+          return new Promise((resolve, reject) => {
+            const done = (response?: HandlerResponse) => {
+              resolve(response);
+            };
+            try {
+              const result = handler(request, done);
+              if (result) {
+                if (result.hasOwnProperty('then')) {
+                  (result as Promise<HandlerResponse>).then(resolve, reject);
+                } else {
+                  resolve(result);
+                }
+              }
+            } catch (e) {
+              reject(e);
+            }
+          });
+        })
+        .then((result: HandlerResponse) => {
           console.log('Success', result);
           if (result && result.statusCode) {
             callback(null, result);
@@ -50,15 +68,15 @@ export class AwsHandlerWrapper implements HandlerWrapper {
       return null;
     }
 
-    if (contentType === 'text/plain') {
+    if (contentType.match(/^text\/plain/i)) {
       return '' + bodyString;
     }
 
-    if (contentType === 'application/x-www-form-urlencoded') {
+    if (contentType.match(/^application\/x-www-form-urlencoded/i)) {
       return querystring.parse(bodyString);
     }
 
-    if (contentType === 'application/json') {
+    if (contentType.match(/^application\/json/i)) {
       return JSON.parse(bodyString);
     }
 

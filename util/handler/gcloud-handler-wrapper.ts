@@ -1,4 +1,4 @@
-import { HandlerWrapper, HandlerRequest, RequestHandler } from './handler-wrapper.interface';
+import { HandlerWrapper, HandlerRequest, RequestHandler, HandlerResponse } from './handler-wrapper.interface';
 import { Request, Response } from 'express';
 
 export class GcloudHandlerWrapper implements HandlerWrapper {
@@ -7,8 +7,26 @@ export class GcloudHandlerWrapper implements HandlerWrapper {
       const request = this.convertRequest(req);
 
       return Promise.resolve()
-        .then(() => handler(request))
-        .then((result) => {
+        .then(() => {
+          return new Promise((resolve, reject) => {
+            const done = (response?: HandlerResponse) => {
+              resolve(response);
+            };
+            try {
+              const result = handler(request, done);
+              if (result) {
+                if (result.hasOwnProperty('then')) {
+                  (result as Promise<HandlerResponse>).then(resolve, reject);
+                } else {
+                  resolve(result);
+                }
+              }
+            } catch (e) {
+              reject(e);
+            }
+          });
+        })
+        .then((result: HandlerResponse) => {
           console.log('Success', result);
           if (result && result.statusCode) {
             response.status(result.statusCode).send(result.body).end();

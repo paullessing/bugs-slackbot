@@ -4,5 +4,5 @@ export const config = {
   channel: "#test-hooks",
   jiraUser: "paul@citypantry.com",
   jiraToken: "37ZdFnxureVaxWdeqkXB9905",
-  jiraServer: "citypantry.atlassian.net"
+  jiraServer: "https://citypantry.atlassian.net"
 };
