@@ -21,5 +21,5 @@ export interface HandlerResponse {
 }
 
 export interface HandlerWrapper {
-  wrap(handler: RequestHandler);
+  wrap(handler: RequestHandler, config?: HandlerConfig);
 }

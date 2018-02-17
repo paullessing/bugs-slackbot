@@ -1,7 +1,7 @@
-const https = require('https');
-const config = require('./config/config');
+import * as https from 'https';
+import { config } from './config';
 
-exports.post = function post(text) {
+export function post(text) {
   const data = JSON.stringify({
     channel: config.channel,
     username: config.username,
@@ -43,4 +43,4 @@ exports.post = function post(text) {
 
     req.end();
   });
-};
+}

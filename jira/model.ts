@@ -8,18 +8,28 @@ export type IssueKey = string;
 
 export interface JiraCommentEvent {
   timestamp: number; // Milliseconds e.g. 1518873292317
-  webhookEvent: 'comment_deleted' | 'comment_created' | 'jira:issue_updated' | UNKNOWN; // TODO
+  // https://developer.atlassian.com/server/jira/platform/webhooks/
+  webhookEvent: 'comment_deleted' | 'comment_created' | 'comment_updated' | UNKNOWN; // TODO
   comment: Comment;
   issue: SimpleIssue;
 }
 
+export function isCommentEvent(event: JiraCommentEvent | JiraIssueEvent): event is JiraCommentEvent {
+  return ['comment_deleted', 'comment_created', 'comment_updated'].indexOf(event.webhookEvent) >= 0;
+}
+
 export interface JiraIssueEvent {
   timestamp: number; // Milliseconds e.g. 1518873292317
-  webhookEvent: "jira:issue_updated" | UNKNOWN;
+  // https://developer.atlassian.com/server/jira/platform/webhooks/
+  webhookEvent: 'jira:issue_created' | 'jira:issue_updated' | 'jira:issue_deleted' | UNKNOWN;
   issue_event_type_name: "issue_assigned" | UNKNOWN;
   user: User;
   issue: DetailedIssue;
   changelog: Changelog;
+}
+
+export function isIssueEvent(event: JiraCommentEvent | JiraIssueEvent): event is JiraIssueEvent {
+  return ['jira:issue_created' , 'jira:issue_updated', 'jira:issue_deleted'].indexOf(event.webhookEvent) >= 0;
 }
 
 export interface User extends ApiObject {
@@ -172,16 +182,66 @@ export interface Progress {
 
 export interface Changelog {
   id: string; // "58069";
-  items: {
-    field: string; // "assignee";
-    fieldtype: string; // "jira";
-    fieldId: string; // "assignee";
-    from: any; // null;
-    fromString: string; // null;
-    to: any; // "paul";
-    toString: string; // "Paul Lessing"
-  }[];
+  items: ChangelogEntry[];
 }
+
+export interface ChangelogEntry {
+  field: string; // "assignee";
+  fieldtype: string; // "jira";
+  fieldId: string; // "assignee";
+  from: any; // null;
+  fromString: string; // null;
+  to: any; // "paul";
+  toString: string; // "Paul Lessing"
+}
+
+/*
+Changed to "Done"
+
+"items": [
+  {
+    "field": "resolution",
+    "fieldtype": "jira",
+    "fieldId": "resolution",
+    "from": null,
+    "fromString": null,
+    "to": "10000",
+    "toString": "Done"
+  },
+  {
+    "field": "status",
+    "fieldtype": "jira",
+    "fieldId": "status",
+    "from": "10000",
+    "fromString": "To Do",
+    "to": "10001",
+    "toString": "Done"
+  }
+]
+
+Changed to "Closed"
+
+"items": [
+  {
+    "field": "resolution",
+    "fieldtype": "jira",
+    "fieldId": "resolution",
+    "from": null,
+    "fromString": null,
+    "to": "10000",
+    "toString": "Done"
+  },
+  {
+    "field": "status",
+    "fieldtype": "jira",
+    "fieldId": "status",
+    "from": "3",
+    "fromString": "In Progress",
+    "to": "6",
+    "toString": "Closed"
+  }
+]
+*/
 
 export interface CustomFields {
   customfield_10000: UNKNOWN | null;
