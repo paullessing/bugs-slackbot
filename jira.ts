@@ -2,6 +2,7 @@ import { HandlerRequest, HandlerResponse } from './util/handler';
 import { Changelog, ChangelogEntry, isIssueEvent, Issue, JiraCommentEvent, JiraIssueEvent } from './jira/model';
 import { jiraApi } from './jira/api';
 import * as slack from './slack';
+import * as moment from 'moment';
 
 export function handleJiraHook(request: HandlerRequest<JiraCommentEvent | JiraIssueEvent>): HandlerResponse | Promise<HandlerResponse> {
   const event = request.body;
@@ -51,7 +52,11 @@ async function handleIssueEvent(event: JiraIssueEvent): Promise<void> {
   console.log('ISSUE ' + event.issue.key + ' moved to ' + (isDone ? 'DONE' : isClosed ? 'CLOSED' : 'Unknown'));
   console.log('Users mentioned: ' + users.join(', '));
 
+  const created = moment(issue.fields.created);
+  const isLongAgo = created.diff(moment(), 'days') < -7;
+
   const message = `Issue ${event.issue.key} (${issue.fields.summary}) has been closed by ${event.user.displayName}.\n` +
+    `This issue was first reported ${created.fromNow()}${isLongAgo ? ` (${created.format('DD/MM/YYYY')})` : ''}.\n` +
     `${users.join(', ')} ${users.length > 1 ? 'were' : 'was'} marked as related.`;
 
   console.log('Posting message:', message);
