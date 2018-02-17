@@ -1,5 +1,5 @@
 # Exclude sensitive data
-/config/config.json
+/config/config.ts
 
 # Serverless
 .serverless
