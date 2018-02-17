@@ -1,9 +1,9 @@
-import { Http, HttpRequestConfig, HttpRequest, RequestHandler, HttpBodyParseType } from './http.interface';
+import { HandlerWrapper, HandlerConfig, HandlerRequest, RequestHandler, HttpBodyParseType } from './handler-wrapper.interface';
 import { APIGatewayEvent } from 'aws-lambda';
 import * as querystring from 'querystring';
 
-export class AwsHttp implements Http {
-  public wrap(handler: RequestHandler, config?: HttpRequestConfig) {
+export class AwsHandlerWrapper implements HandlerWrapper {
+  public wrap(handler: RequestHandler, config?: HandlerConfig) {
     return (event, context, callback) => {
       // console.log('Handling request');
 
@@ -32,9 +32,9 @@ export class AwsHttp implements Http {
     }
   }
 
-  private convertRequest(event: APIGatewayEvent, config?: HttpRequestConfig): HttpRequest {
+  private convertRequest(event: APIGatewayEvent, config?: HandlerConfig): HandlerRequest {
     const body = this.getBody(event.body, config ? config.parse : null); // TODO look at content type instead
-    const request: HttpRequest = {
+    const request: HandlerRequest = {
       headers: { ...event.headers },
       body,
       httpMethod: event.httpMethod

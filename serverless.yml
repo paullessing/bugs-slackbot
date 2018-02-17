@@ -23,7 +23,7 @@ functions:
 #          path: message
 #          method: post
   jiraHook:
-    handler: handler.jira
+    handler: aws-handler.jira
     events:
       - http:
           path: jira

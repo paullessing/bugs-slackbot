@@ -2,7 +2,7 @@
   "name": "bugs-slackbot",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
+  "main": "gcloud-handler.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,13 +10,13 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
-    "@types/body-parser": "^1.16.8",
-    "@types/node": "^9.4.6",
-    "body-parser": "^1.18.2",
-    "serverless-google-cloudfunctions": "^1.1.0"
+    "body-parser": "^1.18.2"
   },
   "devDependencies": {
+    "@types/body-parser": "^1.16.8",
+    "@types/node": "^9.4.6",
     "@types/aws-lambda": "^0.0.32",
-    "serverless-plugin-typescript": "^1.1.5"
+    "serverless-plugin-typescript": "^1.1.5",
+    "serverless-google-cloudfunctions": "^1.1.0"
   }
 }

@@ -1,8 +1,7 @@
-import { Http, HttpBodyParseType, HttpRequest, HttpRequestConfig, RequestHandler } from './http.interface';
-import { APIGatewayEvent } from 'aws-lambda';
+import { HandlerWrapper, HandlerRequest, RequestHandler } from './handler-wrapper.interface';
 import { Request, Response } from 'express';
 
-export class GcloudHttp implements Http {
+export class GcloudHandlerWrapper implements HandlerWrapper {
   public wrap(handler: RequestHandler) {
     return (req: Request, response: Response) => {
       const request = this.convertRequest(req);
@@ -30,11 +29,11 @@ export class GcloudHttp implements Http {
     };
   }
 
-  private convertRequest(request: Request): HttpRequest {
+  private convertRequest(request: Request): HandlerRequest {
     const body = request.body;
     const headers = { ...request.headers } as { [name: string]: string };
 
-    const internalRequest: HttpRequest = {
+    const internalRequest: HandlerRequest = {
       httpMethod: request.method,
       body,
       headers

@@ -1,4 +1,4 @@
-export interface HttpRequest<B = any> {
+export interface HandlerRequest<B = any> {
   headers: {
     [name: string]: string;
   };
@@ -9,17 +9,17 @@ export interface HttpRequest<B = any> {
 
 export type HttpBodyParseType = 'raw' | 'string' | 'json' | 'urlencoded';
 
-export interface HttpRequestConfig {
+export interface HandlerConfig {
   parse?: HttpBodyParseType;
 }
 
-export type RequestHandler = (request: HttpRequest) => HttpResponse | Promise<HttpResponse>;
+export type RequestHandler = (request: HandlerRequest) => HandlerResponse | Promise<HandlerResponse>;
 
-export interface HttpResponse {
+export interface HandlerResponse {
   statusCode: number;
   body?: string;
 }
 
-export interface Http {
+export interface HandlerWrapper {
   wrap(handler: RequestHandler);
 }
