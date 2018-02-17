@@ -1,8 +1,22 @@
 {
-  "name": "demo-env-slackbot",
+  "name": "bugs-slackbot",
   "version": "0.0.1",
+  "description": "",
   "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "author": "Paul Lessing <paul@paullessing.com>",
-  "license": "MIT",
-  "private": false
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@types/body-parser": "^1.16.8",
+    "@types/node": "^9.4.6",
+    "body-parser": "^1.18.2",
+    "serverless-google-cloudfunctions": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^0.0.32",
+    "serverless-plugin-typescript": "^1.1.5"
+  }
 }
