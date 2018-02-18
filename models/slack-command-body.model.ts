@@ -1,5 +1,5 @@
 export interface SlackCommandBody {
-  token: string; // DI9lqLn5yKx709kLkOoU3obv
+  token: string; // alphanumeric
   team_id: string; // T0001
   team_domain: string; // example
   channel_id: string; // C2147483705

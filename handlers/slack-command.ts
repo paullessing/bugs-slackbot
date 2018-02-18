@@ -5,7 +5,7 @@ import { SlackCommandBody } from '../models/slack-command-body.model';
 import { slackApi } from '../api/slack.api';
 import { createUser, isSameUser, parseUser, SlackUser } from '../models/slack-user.model';
 import { Lambda } from 'aws-sdk';
-import { APIGatewayProxyCallback } from 'aws-lambda';
+import { config } from '../config';
 
 interface AddUsersToIssueBody {
   issueKey: string;
@@ -19,20 +19,20 @@ export async function handleSlackCommand(request: HandlerRequest, done: (respons
 
   const body = request.body as SlackCommandBody;
 
-  if (body.token !== 'DI9lqLn5yKx709kLkOoU3obv') {
+  if (body.token !== config.commandToken) {
     return {
       statusCode: 403,
       body: 'Invalid auth token'
     };
   }
 
-  const regex = /^((?:cpd-)?\d+)(?:\s+((?:<@[a-z0-9|]+>(?:,?\s+?)?)+))?/i;
+  const regex = new RegExp(`^((?:${config.bugPrefix})?\\d+)(?:\\s+((?:<@[a-z0-9|]+>(?:,?\\s+?)?)+))?`, 'i');
   const match = body.text.match(regex);
 
   if (!match) {
     return {
       statusCode: 200,
-      body: 'Could not match a bug.\nFormat: `/track-bug CPD-1234 @user1 @user2`'
+      body: `Could not match a bug.\nFormat: \`/track-bug ${config.bugPrefix}1234 @user1 @user2\``
     };
   }
   const loggedInUser = createUser(body.user_id, body.user_name);
@@ -52,7 +52,7 @@ export async function handleSlackCommand(request: HandlerRequest, done: (respons
   const lambda = new Lambda();
 
   const params = {
-    FunctionName: 'arn:aws:lambda:eu-west-2:984077873871:function:bugs-slackbot-dev-addUsersToIssue',
+    FunctionName: 'bugs-slackbot-dev-addUsersToIssue',
     InvocationType: 'Event',
     Payload: JSON.stringify(data)
   };
@@ -61,10 +61,10 @@ export async function handleSlackCommand(request: HandlerRequest, done: (respons
 }
 
 function getIssueKey(keyOrNumber: string): string {
-  if (keyOrNumber.match(/^cpd-\d+$/i)) {
+  if (keyOrNumber.match(new RegExp(`^${config.bugPrefix}\\d+$`, 'i'))) {
     return keyOrNumber.toUpperCase();
   } else {
-    return 'CPD-' + keyOrNumber;
+    return config.bugPrefix + keyOrNumber;
   }
 }
 
@@ -79,35 +79,27 @@ export function addUsersToIssue(data: AddUsersToIssueBody, context, callback: Fu
 
   jiraService.addUsersToIssue(issueKey, getUnique<SlackUser>(users, isSameUser))
     .then((addedUsers) => {
+      let message: string;
+      const bugLink = `<${config.jiraServer}/browse/${issueKey}|${issueKey}>`;
       if (addedUsers.length === 1 && addedUsers[0].id === loggedInUser.id) {
-        slackApi.post(
-          `I have added you to watch bug ${issueKey}.`,
-          responseUrl
-        );
+        message = `I have added you to watch bug ${bugLink}.`;
+      } else if (users.length === 1 && users[0].id === loggedInUser.id && addedUsers.length === 0) {
+        message = `You're already watching ${bugLink}!`;
       } else if (addedUsers.length === 0) {
-        slackApi.post(
-          `No users added, they are all already watching.`,
-          responseUrl
-        );
+        message = `No users added, they are all already watching ${bugLink}!`;
       } else if (addedUsers.length === users.length) {
-        slackApi.post(
-          `${addedUsers.length === 1 ? 'User is' : 'Users are'} now watching bug ${issueKey}.`,
-          responseUrl
-        );
+        message = `${addedUsers.length === 1 ? 'User is' : 'Users are'} now watching bug ${bugLink}.`;
       } else {
-        slackApi.post(
-          (
-            addedUsers.length === 1 ?
-              `User ${addedUsers[0].display} is` :
-              `Users ${addedUsers.map((user) => user.name).join(', ')} are`
-          ) + ` now watching bug ${issueKey}. Some users were already watching.`,
-          responseUrl
-        );
+        message = (addedUsers.length === 1 ?
+          `User ${addedUsers[0].display} is` :
+          `Users ${addedUsers.map((user) => user.name).join(', ')} are`
+        ) + ` now watching bug ${bugLink}. Some users were already watching.`;
       }
+      slackApi.post(message, responseUrl);
 
       addedUsers.forEach((user) => {
         if (user.id !== loggedInUser.id) {
-          slackApi.postToChannel(user.id, `Hi ${user.display},\n${loggedInUser.display} has said you were interested in bug ${issueKey}.\nI will let you know when the bug is closed!`);
+          slackApi.postToChannel(user.id, `Hi ${user.display},\n${loggedInUser.display} has said you were interested in bug ${bugLink}.\nI will let you know when the bug is closed!`);
         }
       });
     }).catch((err) => {

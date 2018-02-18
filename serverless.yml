@@ -1,4 +1,4 @@
-service: bugs-slackbot
+service: bugs-slackbot # Some functions have hardcoded references to this name, so don't change it unless you are willing to debug it
 
 plugins:
   - serverless-plugin-typescript
