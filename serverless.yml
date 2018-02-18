@@ -1,4 +1,4 @@
-service: demo-env-slackbot
+service: bugs-slackbot
 
 plugins:
   - serverless-plugin-typescript
@@ -8,13 +8,11 @@ provider:
   runtime: nodejs6.10
   region: eu-west-2
   memorySize: 128
-#  iamRoleStatements:
-#    - Effect: Allow
-#      Action:
-#        - dynamodb:GetItem
-#        - dynamodb:PutItem
-#        - dynamodb:Scan
-#      Resource: arn:aws:dynamodb:eu-west-1:*:*
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: arn:aws:lambda:eu-west-2:*:*
 
 functions:
   slackMessage:
@@ -29,6 +27,8 @@ functions:
       - http:
           path: jira
           method: post
+  addUsersToIssue:
+    handler: aws-handler.addUsersToIssue
 
 #resources:
 #  Resources:

@@ -5,6 +5,7 @@ import * as slack from './slack-command';
 export function getHandlers(wrapper: HandlerWrapper) {
   return {
     jira: wrapper.wrap(jira.handleJiraHook),
-    slackMessage: wrapper.wrap(slack.handleSlackCommand)
+    slackMessage: wrapper.wrap(slack.handleSlackCommand),
+    addUsersToIssue: slack.addUsersToIssue
   }
 }

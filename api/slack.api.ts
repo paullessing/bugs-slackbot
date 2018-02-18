@@ -6,10 +6,23 @@ export class SlackApi {
     const data = {
       channel: config.channel,
       username: config.username,
-      text: text
+      text
     };
 
     await axios(url || `https://hooks.slack.com${config.slackUrl}`, {
+      method: 'post',
+      data
+    });
+  }
+
+  async postToChannel(channel, text): Promise<void> {
+    const data = {
+      channel,
+      username: config.username,
+      text
+    };
+
+    await axios(`https://hooks.slack.com${config.slackUrl}`, {
       method: 'post',
       data
     });

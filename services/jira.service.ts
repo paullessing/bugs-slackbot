@@ -53,8 +53,8 @@ export class JiraService {
     const created = moment(event.issue.fields.created);
     const isLongAgo = created.diff(moment(), 'days') < -7;
 
-    const message = `Issue closed by ${event.user.displayName}:\n` +
-      `*${event.issue.fields.summary}* (${event.issue.key})\n` +
+    const message = `Issue ${event.issue.key} closed by ${event.user.displayName}:\n` +
+      `*${event.issue.fields.summary}*\n` +
       `First reported ${created.fromNow()}${isLongAgo ? ` (${created.format('DD/MM/YYYY')})` : ''}.\n` +
       `Affected users: ${users.map((u) => u.display).join(', ')}`;
 
@@ -63,7 +63,7 @@ export class JiraService {
     return message;
   }
 
-  public async addUsersToIssue(issueKey: string, users: SlackUser[]): Promise<number> {
+  public async addUsersToIssue(issueKey: string, users: SlackUser[]): Promise<SlackUser[]> {
     const issue = await jiraApi.getIssueWithSummaryAndComments(issueKey);
 
     const usersToAdd: SlackUser[] = [];
@@ -75,7 +75,7 @@ export class JiraService {
       }
     });
     if (!usersToAdd.length) {
-      return 0;
+      return [];
     }
     const userString = usersToAdd.map((user) => user.display).join('\n');
 
@@ -85,7 +85,7 @@ export class JiraService {
     } else {
       await jiraApi.addComment(issueKey, COMMENT_HEADER + userString);
     }
-    return usersToAdd.length;
+    return usersToAdd;
   }
 
   private findTrackingComment(issue: IssueWithSummaryAndComments): Comment | null {
