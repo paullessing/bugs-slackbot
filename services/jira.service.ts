@@ -63,7 +63,7 @@ export class JiraService {
     return message;
   }
 
-  public async addUsersToIssue(issueKey: string, users: SlackUser[]): Promise<SlackUser[]> {
+  public async addUsersToIssue(issueKey: string, users: SlackUser[]): Promise<{ summary: string, affectedUsers: SlackUser[] }> {
     const issue = await jiraApi.getIssueWithSummaryAndComments(issueKey);
 
     const usersToAdd: SlackUser[] = [];
@@ -75,7 +75,10 @@ export class JiraService {
       }
     });
     if (!usersToAdd.length) {
-      return [];
+      return {
+        summary: issue.fields.summary,
+        affectedUsers: []
+      };
     }
     const userString = usersToAdd.map((user) => user.display).join('\n');
 
@@ -85,7 +88,10 @@ export class JiraService {
     } else {
       await jiraApi.addComment(issueKey, COMMENT_HEADER + userString);
     }
-    return usersToAdd;
+    return {
+      summary: issue.fields.summary,
+      affectedUsers: usersToAdd
+    };
   }
 
   private findTrackingComment(issue: IssueWithSummaryAndComments): Comment | null {

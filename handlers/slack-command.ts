@@ -78,28 +78,32 @@ export function addUsersToIssue(data: AddUsersToIssueBody, context, callback: Fu
   } = data;
 
   jiraService.addUsersToIssue(issueKey, getUnique<SlackUser>(users, isSameUser))
-    .then((addedUsers) => {
+    .then(({ affectedUsers, summary }) => {
       let message: string;
       const bugLink = `<${config.jiraServer}/browse/${issueKey}|${issueKey}>`;
-      if (addedUsers.length === 1 && addedUsers[0].id === loggedInUser.id) {
-        message = `I have added you to watch bug ${bugLink}.`;
-      } else if (users.length === 1 && users[0].id === loggedInUser.id && addedUsers.length === 0) {
+      if (affectedUsers.length === 1 && affectedUsers[0].id === loggedInUser.id) {
+        message = `I have added you to watch bug ${bugLink}:\n*${summary}*`;
+      } else if (users.length === 1 && users[0].id === loggedInUser.id && affectedUsers.length === 0) {
         message = `You're already watching ${bugLink}!`;
-      } else if (addedUsers.length === 0) {
+      } else if (affectedUsers.length === 0) {
         message = `No users added, they are all already watching ${bugLink}!`;
-      } else if (addedUsers.length === users.length) {
-        message = `${addedUsers.length === 1 ? 'User is' : 'Users are'} now watching bug ${bugLink}.`;
+      } else if (affectedUsers.length === users.length) {
+        message = `${affectedUsers.length === 1 ? 'User is' : 'Users are'} now watching bug ${bugLink}.`;
       } else {
-        message = (addedUsers.length === 1 ?
-          `User ${addedUsers[0].display} is` :
-          `Users ${addedUsers.map((user) => user.name).join(', ')} are`
+        message = (affectedUsers.length === 1 ?
+          `User ${affectedUsers[0].display} is` :
+          `Users ${affectedUsers.map((user) => user.name).join(', ')} are`
         ) + ` now watching bug ${bugLink}. Some users were already watching.`;
       }
       slackApi.post(message, responseUrl);
 
-      addedUsers.forEach((user) => {
+      affectedUsers.forEach((user) => {
         if (user.id !== loggedInUser.id) {
-          slackApi.postToChannel(user.id, `Hi ${user.display},\n${loggedInUser.display} has said you were interested in bug ${bugLink}.\nI will let you know when the bug is closed!`);
+          slackApi.postToChannel(user.id,
+`Hi ${user.display},
+${loggedInUser.display} has said you were interested in bug ${bugLink}:
+*${summary}*
+I will let you know when the bug is closed!`);
         }
       });
     }).catch((err) => {
