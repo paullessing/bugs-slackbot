@@ -10,13 +10,13 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "@types/aws-sdk": "^2.7.0",
     "aws-sdk": "^2.197.0",
     "axios": "^0.17.1",
     "body-parser": "^1.18.2",
     "moment": "^2.20.1"
   },
   "devDependencies": {
+    "@types/aws-sdk": "^2.7.0",
     "@types/aws-lambda": "^0.0.32",
     "@types/body-parser": "^1.16.8",
     "@types/node": "^9.4.6",

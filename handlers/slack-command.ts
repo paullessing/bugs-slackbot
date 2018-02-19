@@ -26,7 +26,7 @@ export async function handleSlackCommand(request: HandlerRequest, done: (respons
     };
   }
 
-  const regex = new RegExp(`^((?:${config.bugPrefix})?\\d+)(?:\\s+((?:<@[a-z0-9|]+>(?:,?\\s+?)?)+))?`, 'i');
+  const regex = new RegExp(`^((?:${config.bugPrefix})?\\d+)(?:\\s+((?:<@[a-z0-9|_.-]+>(?:,?\\s+?)?)+))?`, 'i'); // TODO don't parse here, just grab the entire thing and send it to the parser
   const match = body.text.match(regex);
 
   if (!match) {
@@ -37,7 +37,7 @@ export async function handleSlackCommand(request: HandlerRequest, done: (respons
   }
   const loggedInUser = createUser(body.user_id, body.user_name);
   const issueKey = getIssueKey(match[1]);
-  const users = (match[2] || '').split(/,\s+/g).filter((user) => !!user).map(parseUser);
+  const users = (match[2] || '').split(/,?\s+/g).filter((user) => !!user).map(parseUser);
   if (!users.length) {
     users.push(loggedInUser);
   }
