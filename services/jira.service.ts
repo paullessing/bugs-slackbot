@@ -4,7 +4,8 @@ import * as moment from 'moment';
 import { getUnique } from '../util/array';
 import { isSameUser, parseUser, SlackUser } from '../models/slack-user.model';
 
-export const COMMENT_HEADER = '*Users tracking this issue:* _(Please do not modify this comment)_\n\n';
+export const COMMENT_HEADER = '*Users tracking this issue:* _(Please do not modify this comment)_';
+export const COMMENT_FOOTER = '\n\n_I\'m a bot, beep boop. Here\'s my [source code|https://github.com/paullessing/bugs-slackbot]._';
 
 export interface IssueUpdate {
   isRelevant: boolean;
@@ -84,9 +85,11 @@ export class JiraService {
 
     const trackingComment = this.findTrackingComment(issue);
     if (trackingComment) {
-      await jiraApi.updateComment(issueKey, trackingComment.id, trackingComment.body + `\n${userString}`);
+      const body = trackingComment.body.replace(/(\r\n)/g, '\n');
+      const newComment = `${body.replace(COMMENT_FOOTER, '')}\n${userString}${COMMENT_FOOTER}`;
+      await jiraApi.updateComment(issueKey, trackingComment.id,  newComment);
     } else {
-      await jiraApi.addComment(issueKey, COMMENT_HEADER + userString);
+      await jiraApi.addComment(issueKey, COMMENT_HEADER + '\n\n' + userString + COMMENT_FOOTER);
     }
     return {
       summary: issue.fields.summary,
@@ -95,9 +98,10 @@ export class JiraService {
   }
 
   private findTrackingComment(issue: IssueWithSummaryAndComments): Comment | null {
-    return issue.fields.comment.comments.find((comment) => {
-      return comment.body.indexOf(COMMENT_HEADER) === 0;
-    });
+    return issue.fields.comment.comments
+      .find((comment) => {
+        return comment.body.indexOf(COMMENT_HEADER) === 0;
+      });
   }
 }
 
