@@ -24,7 +24,7 @@ async function handleJiraEvent(event: JiraIssueEvent): Promise<void> {
   }
 
   const users = await jiraService.getIssueUsers(event.issue.self);
-  if (!users) {
+  if (!users || !users.length) {
     // Nobody cares about this issue :(
     return;
   }
