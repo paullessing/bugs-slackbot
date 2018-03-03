@@ -1,7 +1,7 @@
 service: bugs-slackbot # Some functions have hardcoded references to this name, so don't change it unless you are willing to debug it
 
 plugins:
-  - serverless-plugin-typescript
+  - serverless-webpack
 
 provider:
   name: aws
@@ -23,6 +23,7 @@ functions:
           method: post
   jiraHook:
     handler: aws-handler.jira
+
     events:
       - http:
           path: jira
