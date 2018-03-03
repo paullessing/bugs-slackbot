@@ -18,31 +18,39 @@ export interface IssueUpdate {
 export class JiraService {
 
   public getIssueUpdate(event: JiraIssueEvent): IssueUpdate {
-    const resolution = getEntry(event.changelog, 'resolution');
-    const status = getEntry(event.changelog, 'status');
+    if (event.webhookEvent === 'jira:issue_updated') {
+      const resolution = getEntry(event.changelog, 'resolution');
+      const status = getEntry(event.changelog, 'status');
 
-    console.log(resolution, status);
+      console.log(resolution, status);
 
-    if (!resolution || !status) {
-      console.log('Event does not have both resolution and status, ignoring');
+      if (!resolution || !status) {
+        console.log('Event does not have both resolution and status, ignoring');
+        return {
+          isRelevant: false
+        };
+      }
+
+      const movedToDone = resolution.from === null && resolution.toString === 'Done';
+      const movedOutOfDone = resolution.fromString === 'Done' && resolution.to === null;
+
+      const isDone = status.toString === 'Done';
+      const isClosed = status.toString === 'Closed';
+
       return {
-        isRelevant: false
+        isRelevant: movedToDone, // TODO change to true when we care about moving out of closed
+        movedToDone,
+        movedOutOfDone,
+        isDone,
+        isClosed
+      };
+    } else if (event.webhookEvent === 'jira:issue_created') {
+      const users = getUnique<SlackUser>(getUsers(event.issue.fields.description), isSameUser);
+
+      return {
+        isRelevant: !!users.length
       };
     }
-
-    const movedToDone = resolution.from === null && resolution.toString === 'Done';
-    const movedOutOfDone = resolution.fromString === 'Done' && resolution.to === null;
-
-    const isDone = status.toString === 'Done';
-    const isClosed = status.toString === 'Closed';
-
-    return {
-      isRelevant: movedToDone, // TODO change to true when we care about moving out of closed
-      movedToDone,
-      movedOutOfDone,
-      isDone,
-      isClosed
-    };
   }
 
   public async getIssueUsers(selfLink: string): Promise<SlackUser[]> {
@@ -58,6 +66,16 @@ export class JiraService {
       `*${event.issue.fields.summary}*\n` +
       `First reported ${created.fromNow()}${isLongAgo ? ` (${created.format('DD/MM/YYYY')})` : ''}.\n` +
       `Affected users: ${users.map((u) => u.display).join(', ')}`;
+
+    console.log('Message:', message);
+
+    return message;
+  }
+
+  public getCreatedMessage(event: JiraIssueEvent, users: SlackUser[]): string {
+    const message = `Issue ${event.issue.key} created by ${event.user.displayName}:\n` +
+      `*${event.issue.fields.summary}*\n` +
+      `Users mentioned: ${users.map((u) => u.display).join(', ')}`;
 
     console.log('Message:', message);
 

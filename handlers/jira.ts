@@ -10,7 +10,6 @@ export async function handleJiraHook(request: HandlerRequest<JiraCommentEvent | 
     console.log('Is issue event');
     await handleJiraEvent(event);
   }
-  // TODO mention users when they get added to an issue
 
   return {
     statusCode: 204
@@ -29,6 +28,11 @@ async function handleJiraEvent(event: JiraIssueEvent): Promise<void> {
     return;
   }
 
-  const message = jiraService.getUpdateMessage(event, users);
-  await slackApi.post(message);
+  if (event.webhookEvent === 'jira:issue_updated') {
+    const message = jiraService.getUpdateMessage(event, users);
+    await slackApi.post(message);
+  } else if (event.webhookEvent === 'jira:issue_created') {
+    const message = jiraService.getCreatedMessage(event, users);
+    await slackApi.post(message);
+  }
 }

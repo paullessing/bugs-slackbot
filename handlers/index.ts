@@ -6,6 +6,7 @@ export function getHandlers(wrapper: HandlerWrapper) {
   return {
     jira: wrapper.wrap(jira.handleJiraHook),
     slackMessage: wrapper.wrap(slack.handleSlackCommand),
-    addUsersToIssue: slack.addUsersToIssue
+    addUsersToIssue: slack.addUsersToIssue,
+    notifyUsersMentionedOnIssue: jira.notifyUsersMentionedOnIssue
   }
 }
